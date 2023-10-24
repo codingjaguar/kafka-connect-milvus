@@ -3,6 +3,7 @@ package com.milvus.io.kafka;
 import com.milvus.io.kafka.utils.DataConverter;
 import com.milvus.io.kafka.utils.Utils;
 import com.milvus.io.kafka.utils.VersionUtil;
+import io.milvus.client.MilvusClient;
 import io.milvus.client.MilvusServiceClient;
 import io.milvus.grpc.CollectionSchema;
 import io.milvus.grpc.DescribeCollectionResponse;
@@ -45,15 +46,18 @@ public class MilvusSinkTask extends SinkTask {
         this.converter = new DataConverter(config);
 
         // connect to milvus with username and password
-        this.myMilvusClient = new MilvusServiceClient(
-                ConnectParam.newBuilder()
-                        .withUri(config.getUrl())
-                        .withToken(Utils.decryptToken(config.getToken().value()))
-                        .build());
+        this.myMilvusClient = createMilvusClient(this.config);
         this.collectionSchema = GetCollectionInfo(config.getCollectionName());
 
         log.info("Started MilvusSinkTask, Connecting to Zilliz Cluster:" + config.getUrl());
 
+    }
+
+    protected MilvusServiceClient createMilvusClient(MilvusSinkConnectorConfig config) {
+        return new MilvusServiceClient(ConnectParam.newBuilder()
+                .withUri(config.getUrl())
+                .withToken(Utils.decryptToken(config.getToken().value()))
+                .build());
     }
 
     @Override
